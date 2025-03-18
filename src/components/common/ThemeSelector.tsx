@@ -5,6 +5,7 @@
  * light, dark, and system themes via a dropdown menu.
  */
 
+import { setThemeAtom, themeAtom, ThemeMode } from '@/store/themeAtom';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
@@ -19,7 +20,6 @@ import {
 } from '@mui/material';
 import { useAtom, useSetAtom } from 'jotai';
 import { useState } from 'react';
-import { setThemeAtom, themeAtom, ThemeMode } from '../../store/themeAtom';
 
 export function ThemeSelector() {
     const [theme] = useAtom(themeAtom);

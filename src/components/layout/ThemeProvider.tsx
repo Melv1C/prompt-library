@@ -5,11 +5,11 @@
  * to the entire application using MUI's ThemeProvider.
  */
 
+import { effectiveThemeAtom } from '@/store/themeAtom';
 import { CssBaseline, ThemeProvider as MuiThemeProvider } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import { useAtom } from 'jotai';
 import { useEffect, useMemo } from 'react';
-import { effectiveThemeAtom } from '../../store/themeAtom';
 
 type ThemeProviderProps = {
     children: React.ReactNode;
