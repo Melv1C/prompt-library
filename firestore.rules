@@ -1,0 +1,47 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Basic function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if the authenticated user is the owner of the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // User collection rules
+    match /users/{userId} {
+      // Allow create if authenticated and userId matches auth uid
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Allow read to the user's own document
+      allow read: if isOwner(userId);
+      
+      // Allow update if authenticated and userId matches auth uid
+      // Prevent modification of sensitive fields like promptCount
+      allow update: if isOwner(userId) && 
+        (!request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['createdAt', 'promptCount']));
+    }
+    
+    // Prompt collection rules - will expand in future steps
+    match /prompts/{promptId} {
+      // Allow create if authenticated
+      allow create: if isAuthenticated() && 
+                     request.resource.data.authorId == request.auth.uid;
+      
+      // Allow read if document is public or user is the author
+      allow read: if resource.data.isPublic == true || 
+                   isOwner(resource.data.authorId);
+      
+      // Allow update if user is the author
+      allow update: if isOwner(resource.data.authorId);
+      
+      // Allow delete if user is the author
+      allow delete: if isOwner(resource.data.authorId);
+    }
+  }
+}
