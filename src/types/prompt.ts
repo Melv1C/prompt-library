@@ -25,12 +25,10 @@ export const PromptSchema = z.object({
         .string()
         .min(1, 'Content is required')
         .max(10000, 'Content cannot exceed 10,000 characters'),
-    // Update tags to use enum values with array size constraints
     tags: z
         .array(z.nativeEnum(PromptTag))
-        .min(1, 'At least one tag is required')
-        .max(10, 'Cannot have more than 10 tags'),
-    // Define category as an enum of valid values
+        .max(10, 'Cannot have more than 10 tags')
+        .default([]), // Default to empty array, we'll enforce minimum in the form
     category: z
         .nativeEnum(PromptCategory, {
             errorMap: () => ({ message: 'Please select a valid category' }),
@@ -57,14 +55,6 @@ export const CreatePromptSchema = PromptSchema.omit({
     updatedAt: true,
     favoriteCount: true,
 }).extend({
-    // Any additional validation or defaults for creation
-    isPublic: z.boolean().default(false),
-    // Default category if none provided
-    category: z
-        .nativeEnum(PromptCategory, {
-            errorMap: () => ({ message: 'Please select a valid category' }),
-        })
-        .default(PromptCategory.OTHER),
     // Ensure content is properly validated for new prompts
     content: z
         .string()
@@ -76,28 +66,9 @@ export const CreatePromptSchema = PromptSchema.omit({
 export type CreatePromptType = z.infer<typeof CreatePromptSchema>;
 
 // Schema for updating an existing prompt (all fields optional except id)
-export const UpdatePromptSchema = PromptSchema.omit({
-    id: true,
-    createdAt: true,
-    favoriteCount: true,
+export const UpdatePromptSchema = CreatePromptSchema.extend({
+    id: z.string().min(1, 'Prompt ID cannot be empty'), // ID is required for updates
+    updatedAt: z.coerce.date(), // Updated at is optional for updates
 })
-    .partial()
-    .extend({
-        updatedAt: z.coerce.date(), // Required for updates
-        // If title is provided, it must meet these requirements
-        title: z
-            .string()
-            .min(1, 'Title is required')
-            .max(100, 'Title cannot exceed 100 characters')
-            .trim()
-            .optional(),
-        // If content is provided, it must meet these requirements
-        content: z
-            .string()
-            .min(1, 'Content is required')
-            .max(10000, 'Content cannot exceed 10,000 characters')
-            .trim()
-            .optional(),
-    });
 
 export type UpdatePromptType = z.infer<typeof UpdatePromptSchema>;

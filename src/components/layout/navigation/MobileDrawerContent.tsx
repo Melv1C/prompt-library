@@ -6,7 +6,7 @@
  */
 
 import { ThemeSelector } from '@/components/common/ThemeSelector';
-import { useAuth } from '@/hooks/useAuth';
+import { UserType } from '@/types';
 import CloseIcon from '@mui/icons-material/Close';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -32,7 +32,7 @@ import { navLinks } from './navLinks';
  * Props for MobileDrawerContent component
  */
 interface MobileDrawerContentProps {
-    user: ReturnType<typeof useAuth>['user'];
+    user: UserType | null;
     isAuthenticated: boolean;
     handleDrawerToggle: () => void;
     handleLogout: () => void;

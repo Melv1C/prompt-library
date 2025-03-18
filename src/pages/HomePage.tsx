@@ -5,6 +5,7 @@
  *
  */
 
+import { useAuth } from '@/hooks/useAuth';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import CollectionsBookmarkIcon from '@mui/icons-material/CollectionsBookmark';
 import ShareIcon from '@mui/icons-material/Share';
@@ -13,6 +14,9 @@ import { Box, Button, Container, Grid, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 
 export function HomePage() {
+    // Get authentication status to show appropriate CTA buttons
+    const { isAuthenticated } = useAuth();
+
     return (
         <Container>
             {/* Hero Section */}
@@ -48,15 +52,29 @@ export function HomePage() {
                     >
                         Browse Prompts
                     </Button>
-                    <Button
-                        variant="outlined"
-                        size="large"
-                        component={RouterLink}
-                        to="/register"
-                        sx={{ mx: 1 }}
-                    >
-                        Get Started
-                    </Button>
+
+                    {/* Conditional button based on authentication status */}
+                    {isAuthenticated ? (
+                        <Button
+                            variant="outlined"
+                            size="large"
+                            component={RouterLink}
+                            to="/profile"
+                            sx={{ mx: 1 }}
+                        >
+                            My Profile
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="outlined"
+                            size="large"
+                            component={RouterLink}
+                            to="/register"
+                            sx={{ mx: 1 }}
+                        >
+                            Get Started
+                        </Button>
+                    )}
                 </Box>
             </Box>
 

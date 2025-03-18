@@ -6,7 +6,7 @@
  */
 
 import { auth } from '@/config/firebase';
-import { firebaseUserToUser } from '@/services/auth';
+import { firebaseUserToUser } from '@/services/authService';
 import { UserType } from '@/types/user';
 import { Unsubscribe } from 'firebase/auth';
 import { atom } from 'jotai';

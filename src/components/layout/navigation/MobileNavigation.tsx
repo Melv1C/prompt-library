@@ -5,7 +5,7 @@
  *
  */
 
-import { useAuth } from '@/hooks/useAuth';
+import { UserType } from '@/types';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Badge, Drawer, IconButton } from '@mui/material';
 import { MobileDrawerContent } from './MobileDrawerContent';
@@ -14,7 +14,7 @@ import { MobileDrawerContent } from './MobileDrawerContent';
  * Props for MobileNavigation component
  */
 interface MobileNavigationProps {
-    user: ReturnType<typeof useAuth>['user'];
+    user: UserType | null;
     isAuthenticated: boolean;
     mobileOpen: boolean;
     handleDrawerToggle: () => void;

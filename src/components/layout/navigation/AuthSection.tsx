@@ -5,7 +5,7 @@
  *
  */
 
-import { useAuth } from '@/hooks/useAuth';
+import { UserType } from '@/types';
 import { SignInButton } from './SignInButton';
 import { UserMenu } from './UserMenu';
 
@@ -13,7 +13,7 @@ import { UserMenu } from './UserMenu';
  * Props for AuthSection component
  */
 interface AuthSectionProps {
-    user: ReturnType<typeof useAuth>['user'];
+    user: UserType | null;
     isAuthenticated: boolean;
     anchorEl: HTMLElement | null;
     handleMenuOpen: (event: React.MouseEvent<HTMLElement>) => void;

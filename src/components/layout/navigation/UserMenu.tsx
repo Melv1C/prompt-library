@@ -5,7 +5,7 @@
  *
  */
 
-import { useAuth } from '@/hooks/useAuth';
+import { UserType } from '@/types';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
@@ -25,7 +25,7 @@ import { NavLink } from 'react-router-dom';
  * Props for UserMenu component
  */
 interface UserMenuProps {
-    user: ReturnType<typeof useAuth>['user'];
+    user: UserType | null;
     anchorEl: HTMLElement | null;
     handleMenuOpen: (event: React.MouseEvent<HTMLElement>) => void;
     handleMenuClose: () => void;
