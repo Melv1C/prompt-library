@@ -183,10 +183,12 @@ export interface PromptQueryOptions {
     authorId?: string;
     isPublic?: boolean;
     category?: PromptCategory;
+    categories?: PromptCategory[]; // Support for multiple categories
     tags?: PromptTag[];
-    orderByField?: 'createdAt' | 'updatedAt' | 'favoriteCount';
+    orderByField?: 'createdAt' | 'updatedAt' | 'favoriteCount' | 'title';
     orderDirection?: 'asc' | 'desc';
     limitTo?: number;
+    searchQuery?: string; // Text search capability
 }
 
 /**
@@ -209,23 +211,49 @@ export const getPrompts = async (
             constraints.push(where('isPublic', '==', options.isPublic));
         }
 
-        if (options.category) {
+        // Handle category filtering - prioritize categories array over single category
+        if (options.categories && options.categories.length > 0) {
+            // Firestore supports in query for up to 10 values
+            if (options.categories.length <= 10) {
+                constraints.push(where('category', 'in', options.categories));
+            } else {
+                // If more than 10 categories, we'll need to perform client-side filtering later
+                console.warn(
+                    'More than 10 categories provided, some filtering will be done client-side'
+                );
+                constraints.push(
+                    where('category', 'in', options.categories.slice(0, 10))
+                );
+            }
+        } else if (options.category) {
             constraints.push(where('category', '==', options.category));
         }
 
         // Apply tag filtering if provided
         if (options.tags && options.tags.length > 0) {
             // Firestore can only filter on array-contains for a single value
-            // For multiple tags, we would need a more complex solution or multiple queries
+            // For multiple tags, we use array-contains-any (up to 10 values)
             if (options.tags.length === 1) {
                 constraints.push(
                     where('tags', 'array-contains', options.tags[0])
                 );
             } else {
-                // For multiple tags, we need an "array-contains-any" query
+                // For multiple tags (up to 10), we can use array-contains-any
                 constraints.push(
-                    where('tags', 'array-contains-any', options.tags)
+                    where(
+                        'tags',
+                        'array-contains-any',
+                        options.tags.length <= 10
+                            ? options.tags
+                            : options.tags.slice(0, 10)
+                    )
                 );
+
+                if (options.tags.length > 10) {
+                    console.warn(
+                        'More than 10 tags provided, some filtering will be done client-side'
+                    );
+                }
             }
         }
 
@@ -247,9 +275,51 @@ export const getPrompts = async (
         const q = query(promptsRef, ...constraints);
         const querySnapshot = await getDocs(q);
 
-        return querySnapshot.docs
+        let results = querySnapshot.docs
             .map((doc) => convertDocToPrompt(doc))
             .filter((prompt): prompt is PromptType => prompt !== null);
+
+        // Handle text search (client-side filtering since Firestore doesn't support full-text search)
+        if (options.searchQuery && options.searchQuery.trim() !== '') {
+            const searchTerms = options.searchQuery
+                .toLowerCase()
+                .trim()
+                .split(/\s+/);
+
+            results = results.filter((prompt) => {
+                const titleText = prompt.title.toLowerCase();
+                const descriptionText = prompt.description?.toLowerCase() || '';
+                const contentText = prompt.content.toLowerCase();
+
+                // Check if all search terms appear in at least one of the fields
+                return searchTerms.every(
+                    (term) =>
+                        titleText.includes(term) ||
+                        descriptionText.includes(term) ||
+                        contentText.includes(term)
+                );
+            });
+        }
+
+        // Handle additional client-side filtering for excess categories (if needed)
+        if (options.categories && options.categories.length > 10) {
+            const remainingCategories = options.categories.slice(10);
+            results = results.filter((prompt) =>
+                remainingCategories.includes(prompt.category)
+            );
+        }
+
+        // Handle additional client-side filtering for excess tags (if needed)
+        if (options.tags && options.tags.length > 10) {
+            const remainingTags = options.tags.slice(10);
+            results = results.filter((prompt) =>
+                prompt.tags.some((tag) =>
+                    remainingTags.includes(tag as PromptTag)
+                )
+            );
+        }
+
+        return results;
     } catch (error) {
         console.error('Error fetching prompts:', error);
         throw new Error(
