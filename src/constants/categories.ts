@@ -10,17 +10,11 @@
  * Used for categorizing prompts and filtering
  */
 export enum PromptCategory {
-    // AI Assistant prompt categories
     ASSISTANT = 'Assistant',
     INSTRUCTION = 'Instruction',
-    PERSONA = 'Persona',
-
-    // Knowledge and context categories
+    RULES = 'Rules',
     PROJECT_CONTEXT = 'Project Context',
-    DOMAIN_KNOWLEDGE = 'Domain Knowledge',
-
-    // Meta categories
-    UTILITY = 'Utility',
+    DOCUMENTATION = 'Documentation',
     OTHER = 'Other',
 }
 
