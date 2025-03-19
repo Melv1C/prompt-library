@@ -5,9 +5,9 @@
  * and applies the theme provider.
  */
 
-import { AuthProvider } from '@/components/common/AuthProvider';
-import { ProtectedRoute } from '@/components/common/ProtectedRoute';
-import { PublicOnlyRoute } from '@/components/common/PublicOnlyRoute';
+import { AuthProvider } from '@/components/auth/AuthProvider';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { PublicOnlyRoute } from '@/components/auth/PublicOnlyRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ThemeProvider } from '@/components/layout/ThemeProvider';
 import { CreatePromptPage } from '@/pages/CreatePromptPage';
