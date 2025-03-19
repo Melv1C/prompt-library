@@ -5,7 +5,7 @@
  *
  */
 
-import { PromptCategory, PromptTag } from '@/constants';
+import { PromptCategory } from '@/constants';
 import { useCreatePrompt, useUpdatePrompt } from '@/hooks/usePromptActions';
 import { userAtom } from '@/store/authAtom';
 import {
@@ -20,7 +20,6 @@ import {
     Box,
     Button,
     Checkbox,
-    Chip,
     FormControl,
     FormControlLabel,
     FormHelperText,
@@ -33,6 +32,7 @@ import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { TagSelector } from './TagSelector';
 
 interface PromptFormProps {
     prompt?: PromptType;
@@ -229,50 +229,16 @@ export function PromptForm({
                 )}
             />
 
-            <Controller
-                name="tags"
-                control={control}
-                render={({ field }) => (
-                    <FormControl
-                        fullWidth
-                        margin="normal"
-                        error={!!errors.tags}
-                    >
-                        <InputLabel id="tags-label">Tags</InputLabel>
-                        <Select
-                            {...field}
-                            labelId="tags-label"
-                            id="tags"
-                            label="Tags"
-                            multiple
-                            renderValue={(selected) => (
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: 0.5,
-                                    }}
-                                >
-                                    {selected.map((value) => (
-                                        <Chip key={value} label={value} />
-                                    ))}
-                                </Box>
-                            )}
-                        >
-                            {Object.entries(PromptTag).map(([key, value]) => (
-                                <MenuItem key={key} value={value}>
-                                    {value}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                        {errors.tags && (
-                            <FormHelperText>
-                                {errors.tags.message?.toString()}
-                            </FormHelperText>
-                        )}
-                    </FormControl>
-                )}
-            />
+            {/* Use the extracted TagSelector component */}
+            <FormControl fullWidth margin="normal" error={!!errors.tags}>
+                <TagSelector
+                    name="tags"
+                    control={control}
+                    label="Tags"
+                    error={!!errors.tags}
+                    helperText={errors.tags?.message?.toString()}
+                />
+            </FormControl>
 
             <Controller
                 name="isPublic"
@@ -297,8 +263,7 @@ export function PromptForm({
                 fullWidth
                 variant="contained"
                 sx={{ mt: 3, mb: 2 }}
-                loading={loading}
-                disabled={!isDirty || !isValid} // Also check if form has been modified
+                disabled={!isDirty || !isValid || loading} // Fixed loading prop
             >
                 {isEditing ? 'Update Prompt' : 'Create Prompt'}
             </Button>
