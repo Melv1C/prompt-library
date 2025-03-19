@@ -33,6 +33,8 @@ import {
     Stack,
     Tooltip,
     Typography,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material';
 import { useAtomValue } from 'jotai';
 import { useMemo, useState } from 'react';
@@ -43,6 +45,8 @@ export function PromptDetailPage() {
     const { prompt, loading, error } = usePrompt(promptId);
     const currentUser = useAtomValue(userAtom);
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     // Delete functionality
     const { deletePromptAction, state: deleteState } = useDeletePrompt();
@@ -126,8 +130,10 @@ export function PromptDetailPage() {
                         sx={{
                             mb: 3,
                             display: 'flex',
+                            flexDirection: isMobile ? 'column' : 'row',
                             justifyContent: 'space-between',
-                            alignItems: 'flex-start',
+                            alignItems: isMobile ? 'flex-start' : 'flex-start',
+                            gap: isMobile ? 2 : 0,
                         }}
                     >
                         {/* Title and chips on the left */}
@@ -165,27 +171,63 @@ export function PromptDetailPage() {
 
                         {/* Edit/Delete buttons - only visible to author */}
                         {isAuthor && (
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                <Button
-                                    startIcon={<EditIcon />}
-                                    component={RouterLink}
-                                    to={`/prompts/${prompt.id}/edit`}
-                                    color="primary"
-                                    variant="outlined"
-                                    size="small"
-                                >
-                                    Edit
-                                </Button>
-                                <Button
-                                    startIcon={<DeleteIcon />}
-                                    color="error"
-                                    variant="outlined"
-                                    size="small"
-                                    onClick={handleDeleteClick}
-                                    disabled={deleteState.loading}
-                                >
-                                    Delete
-                                </Button>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    gap: 1,
+                                    flexDirection: isMobile ? 'row' : 'row',
+                                    width: isMobile ? '100%' : 'auto',
+                                }}
+                            >
+                                {isMobile ? (
+                                    <>
+                                        <Button
+                                            startIcon={<EditIcon />}
+                                            component={RouterLink}
+                                            to={`/prompts/${prompt.id}/edit`}
+                                            color="primary"
+                                            variant="contained"
+                                            size="small"
+                                            fullWidth
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            startIcon={<DeleteIcon />}
+                                            color="error"
+                                            variant="contained"
+                                            size="small"
+                                            onClick={handleDeleteClick}
+                                            disabled={deleteState.loading}
+                                            fullWidth
+                                        >
+                                            Delete
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Button
+                                            startIcon={<EditIcon />}
+                                            component={RouterLink}
+                                            to={`/prompts/${prompt.id}/edit`}
+                                            color="primary"
+                                            variant="outlined"
+                                            size="small"
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            startIcon={<DeleteIcon />}
+                                            color="error"
+                                            variant="outlined"
+                                            size="small"
+                                            onClick={handleDeleteClick}
+                                            disabled={deleteState.loading}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </>
+                                )}
                             </Box>
                         )}
                     </Box>
