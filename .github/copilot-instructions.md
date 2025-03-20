@@ -366,14 +366,6 @@ interface PromptService {
 -   `PasswordResetForm`: Form to request password reset
 -   `ProfileForm`: Form to update user profile information
 
-#### Common Components
-
--   `AuthInit`: Component to initialize authentication state
--   `ProtectedRoute`: Route wrapper that requires authentication
--   `PublicOnlyRoute`: Route wrapper accessible only when not authenticated
--   `LoadingIndicator`: Loading spinner/indicator
--   `ErrorDisplay`: Error message component
-
 #### Prompt Components
 
 -   `PromptCard`: Card displaying prompt summary

@@ -11,8 +11,10 @@ import SearchBar from '@/components/common/SearchBar';
 import FilterSidebar from '@/components/layout/FilterSidebar';
 import { PromptCard } from '@/components/prompt/PromptCard';
 import { PromptCategory, PromptTag } from '@/constants';
+import { useMultipleFavoriteStatuses } from '@/hooks/useMultipleFavoriteStatuses';
 import { usePublicPrompts } from '@/hooks/usePrompts';
 import { filterStateAtom } from '@/store/filterStore';
+import { PromptType } from '@/types/prompt';
 import {
     Alert,
     Box,
@@ -24,11 +26,15 @@ import {
     useTheme,
 } from '@mui/material';
 import { useAtomValue } from 'jotai';
+import { useEffect, useMemo, useState } from 'react';
 
 export function PublicPromptsPage() {
     const filterState = useAtomValue(filterStateAtom);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+    // State for sorted prompts
+    const [sortedPrompts, setSortedPrompts] = useState<PromptType[]>([]);
 
     // Convert filter state to query options for the hook
     const queryOptions = {
@@ -41,15 +47,87 @@ export function PublicPromptsPage() {
                 ? (filterState.selectedCategories as PromptCategory[])
                 : undefined,
         tags: filterState.selectedTags as PromptTag[],
-        orderByField: filterState.sortField === 'category' 
-            ? 'title' // Fallback to title if category is selected
-            : filterState.sortField as 'title' | 'createdAt' | 'updatedAt' | 'favoriteCount' | undefined,
+        orderByField:
+            filterState.sortField === 'category'
+                ? 'title' // Fallback to title if category is selected
+                : (filterState.sortField as
+                      | 'title'
+                      | 'createdAt'
+                      | 'updatedAt'
+                      | 'favoriteCount'
+                      | undefined),
         orderDirection: filterState.sortDirection,
         searchQuery: filterState.searchQuery,
     };
 
     // Use the usePublicPrompts hook to fetch all public prompts
     const { prompts, loading, error } = usePublicPrompts(queryOptions);
+
+    // Extract prompt IDs for favorites hook
+    const promptIds = useMemo(
+        () => prompts.map((prompt) => prompt.id),
+        [prompts]
+    );
+
+    // Use the new hook to get all favorite statuses at once
+    const { favoriteStatuses, loading: favoritesLoading } =
+        useMultipleFavoriteStatuses(promptIds);
+
+    // Sort prompts based on favorite status and favorite count
+    useEffect(() => {
+        if (!loading && !favoritesLoading && prompts.length > 0) {
+            const sorted = [...prompts].sort((a, b) => {
+                // First priority: user's favorites at the top
+                const isAFavorite = favoriteStatuses[a.id] || false;
+                const isBFavorite = favoriteStatuses[b.id] || false;
+
+                if (isAFavorite && !isBFavorite) return -1;
+                if (!isAFavorite && isBFavorite) return 1;
+
+                // Second priority: sort by favorite count (higher count first)
+                const aFavoriteCount = a.favoriteCount || 0;
+                const bFavoriteCount = b.favoriteCount || 0;
+
+                if (aFavoriteCount !== bFavoriteCount) {
+                    return bFavoriteCount - aFavoriteCount;
+                }
+
+                // Third priority: apply the selected sort field from filter state
+                // This serves as a tiebreaker for prompts with equal favorite status/count
+                if (filterState.sortField === 'title') {
+                    return (
+                        a.title.localeCompare(b.title) *
+                        (filterState.sortDirection === 'asc' ? 1 : -1)
+                    );
+                }
+
+                if (
+                    filterState.sortField === 'createdAt' ||
+                    filterState.sortField === 'updatedAt'
+                ) {
+                    const aDate = a[filterState.sortField].getTime();
+                    const bDate = b[filterState.sortField].getTime();
+                    return (
+                        (bDate - aDate) *
+                        (filterState.sortDirection === 'asc' ? -1 : 1)
+                    );
+                }
+
+                return 0;
+            });
+
+            setSortedPrompts(sorted);
+        } else {
+            setSortedPrompts([]);
+        }
+    }, [
+        loading,
+        favoritesLoading,
+        prompts,
+        favoriteStatuses,
+        filterState.sortField,
+        filterState.sortDirection,
+    ]);
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -114,7 +192,7 @@ export function PublicPromptsPage() {
                     )}
 
                     <Grid container spacing={3}>
-                        {prompts.map((prompt) => (
+                        {sortedPrompts.map((prompt) => (
                             <Grid
                                 item
                                 xs={12}

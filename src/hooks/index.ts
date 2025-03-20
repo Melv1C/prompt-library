@@ -1,7 +1,7 @@
 /**
  * File: src/hooks/index.ts
  *
- * Description: Export file for all prompt-related hooks to simplify imports
+ * Description: Exports all custom hooks for convenient imports.
  *
  */
 

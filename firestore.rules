@@ -12,6 +12,21 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
+    // Check if the update only affects specific fields
+    function onlyChangesFields(allowedFields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowedFields);
+    }
+    
+    // Check if an array field is only having items added or removed (for favoritePrompts)
+    function isArrayModification(fieldName) {
+      // Get the old and new arrays
+      let oldArray = resource.data[fieldName] == null ? [] : resource.data[fieldName];
+      let newArray = request.resource.data[fieldName] == null ? [] : request.resource.data[fieldName];
+      
+      // Check that only one item is being added or removed at a time
+      return newArray.size() == oldArray.size() + 1 || newArray.size() == oldArray.size() - 1;
+    }
+    
     // User collection rules
     match /users/{userId} {
       // Allow create if authenticated and userId matches auth uid
@@ -21,13 +36,18 @@ service cloud.firestore {
       allow read: if isOwner(userId);
       
       // Allow update if authenticated and userId matches auth uid
-      // Prevent modification of sensitive fields like promptCount
-      allow update: if isOwner(userId) && 
+      // Special case for favoritePrompts array which can be modified
+      allow update: if isOwner(userId) && (
+        // Regular update not touching protected fields
         (!request.resource.data.diff(resource.data).affectedKeys()
-          .hasAny(['createdAt', 'promptCount']));
+          .hasAny(['createdAt', 'promptCount'])) || 
+          
+        // OR only modifying the favoritePrompts array
+        (onlyChangesFields(['favoritePrompts']) && isArrayModification('favoritePrompts'))
+      );
     }
     
-    // Prompt collection rules - will expand in future steps
+    // Prompt collection rules
     match /prompts/{promptId} {
       // Allow create if authenticated
       allow create: if isAuthenticated() && 
@@ -37,8 +57,15 @@ service cloud.firestore {
       allow read: if resource.data.isPublic == true || 
                    isOwner(resource.data.authorId);
       
-      // Allow update if user is the author
+      // Allow full update if user is the author
       allow update: if isOwner(resource.data.authorId);
+      
+      // Allow favoriteCount updates by any authenticated user
+      allow update: if isAuthenticated() && 
+                    onlyChangesFields(['favoriteCount']) && 
+                    // Only allow incrementing or decrementing by 1
+                    (request.resource.data.favoriteCount == resource.data.favoriteCount + 1 || 
+                     request.resource.data.favoriteCount == resource.data.favoriteCount - 1);
       
       // Allow delete if user is the author
       allow delete: if isOwner(resource.data.authorId);

@@ -9,7 +9,6 @@ import { UserType } from '@/types';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
-import SettingsIcon from '@mui/icons-material/Settings';
 import {
     Avatar,
     Divider,
@@ -93,7 +92,7 @@ export const UserMenu = ({
                 </ListItemIcon>
                 Profile
             </MenuItem>
-            <MenuItem
+            {/* <MenuItem
                 component={NavLink}
                 to="/settings"
                 onClick={handleMenuClose}
@@ -102,7 +101,7 @@ export const UserMenu = ({
                     <SettingsIcon fontSize="small" />
                 </ListItemIcon>
                 Settings
-            </MenuItem>
+            </MenuItem> */}
             <Divider />
             <MenuItem onClick={handleLogout}>
                 <ListItemIcon>

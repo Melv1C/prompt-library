@@ -2,16 +2,19 @@
  * File: src/pages/PromptDetailPage.tsx
  *
  * Description: Page component for viewing detailed information about a specific prompt
- * with edit and delete options for the prompt author.
+ * with edit, delete, and favorite options for users.
  *
  */
 
-import { usePrompt } from '@/hooks/usePrompt';
+import { usePrompt } from '@/hooks';
+import { useFavoriteStatus } from '@/hooks/useFavorites';
 import { useDeletePrompt } from '@/hooks/usePromptActions';
 import { userAtom } from '@/store/authAtom';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import {
     Alert,
     Box,
@@ -52,6 +55,14 @@ export function PromptDetailPage() {
     const { deletePromptAction, state: deleteState } = useDeletePrompt();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+    // Favorite functionality
+    const {
+        isFavorite,
+        favoriteCount,
+        loading: favoriteLoading,
+        toggleFavorite,
+    } = useFavoriteStatus(promptId);
+
     // Copy to clipboard functionality
     const [copied, setCopied] = useState(false);
 
@@ -91,6 +102,17 @@ export function PromptDetailPage() {
 
     const handleDeleteCancel = () => {
         setDeleteDialogOpen(false);
+    };
+
+    // Handle favorite toggle
+    const handleFavoriteToggle = async () => {
+        if (!currentUser) {
+            // Redirect to login if not authenticated
+            navigate('/login', { state: { from: `/prompts/${promptId}` } });
+            return;
+        }
+
+        await toggleFavorite();
     };
 
     // Render loading state
@@ -152,84 +174,131 @@ export function PromptDetailPage() {
                                     flexWrap: 'wrap',
                                 }}
                             >
+                                {/* Favorite count chip - always visible */}
+                                <Chip
+                                    icon={<FavoriteIcon fontSize="small" />}
+                                    label={favoriteCount}
+                                    size="small"
+                                    variant="outlined"
+                                    color="error"
+                                    sx={{
+                                        padding: '0.25rem 0.5rem',
+                                    }}
+                                />
+                                
                                 <Chip
                                     label={prompt.category}
                                     color="primary"
                                     size="small"
                                 />
-                                <Chip
-                                    label={
-                                        prompt.isPublic ? 'Public' : 'Private'
-                                    }
-                                    color={
-                                        prompt.isPublic ? 'success' : 'default'
-                                    }
-                                    size="small"
-                                />
+                                
+                                {isAuthor && (
+                                    <Chip
+                                        label={
+                                            prompt.isPublic ? 'Public' : 'Private'
+                                        }
+                                        color={
+                                            prompt.isPublic ? 'success' : 'default'
+                                        }
+                                        size="small"
+                                    />
+                                )}
+
                             </Box>
                         </Box>
+                        {/* Action buttons */}
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                gap: 1,
+                                flexDirection: isMobile ? 'row' : 'row',
+                                width: isMobile ? '100%' : 'auto',
+                            }}
+                        >
+                            {/* Favorite button - visible to logged-in users */}
+                            {currentUser && (
+                                <Tooltip
+                                    title={
+                                        isFavorite
+                                            ? 'Remove from favorites'
+                                            : 'Add to favorites'
+                                    }
+                                >
+                                    <IconButton
+                                        color="error"
+                                        onClick={handleFavoriteToggle}
+                                        disabled={favoriteLoading}
+                                        size="medium"
+                                    >
+                                        {favoriteLoading ? (
+                                            <CircularProgress
+                                                size={20}
+                                                color="inherit"
+                                            />
+                                        ) : isFavorite ? (
+                                            <FavoriteIcon />
+                                        ) : (
+                                            <FavoriteBorderIcon />
+                                        )}
+                                    </IconButton>
+                                </Tooltip>
+                            )}
 
-                        {/* Edit/Delete buttons - only visible to author */}
-                        {isAuthor && (
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    gap: 1,
-                                    flexDirection: isMobile ? 'row' : 'row',
-                                    width: isMobile ? '100%' : 'auto',
-                                }}
-                            >
-                                {isMobile ? (
-                                    <>
-                                        <Button
-                                            startIcon={<EditIcon />}
-                                            component={RouterLink}
-                                            to={`/prompts/${prompt.id}/edit`}
-                                            color="primary"
-                                            variant="contained"
-                                            size="small"
-                                            fullWidth
-                                        >
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            startIcon={<DeleteIcon />}
-                                            color="error"
-                                            variant="contained"
-                                            size="small"
-                                            onClick={handleDeleteClick}
-                                            disabled={deleteState.loading}
-                                            fullWidth
-                                        >
-                                            Delete
-                                        </Button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Button
-                                            startIcon={<EditIcon />}
-                                            component={RouterLink}
-                                            to={`/prompts/${prompt.id}/edit`}
-                                            color="primary"
-                                            variant="outlined"
-                                            size="small"
-                                        >
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            startIcon={<DeleteIcon />}
-                                            color="error"
-                                            variant="outlined"
-                                            size="small"
-                                            onClick={handleDeleteClick}
-                                            disabled={deleteState.loading}
-                                        >
-                                            Delete
-                                        </Button>
-                                    </>
-                                )}
-                            </Box>
-                        )}
+                            {/* Edit/Delete buttons - only visible to author */}
+                            {isAuthor && (
+                                <>
+                                    {isMobile ? (
+                                        <>
+                                            <Button
+                                                startIcon={<EditIcon />}
+                                                component={RouterLink}
+                                                to={`/prompts/${prompt.id}/edit`}
+                                                color="primary"
+                                                variant="contained"
+                                                size="small"
+                                                fullWidth
+                                            >
+                                                Edit
+                                            </Button>
+                                            <Button
+                                                startIcon={<DeleteIcon />}
+                                                color="error"
+                                                variant="contained"
+                                                size="small"
+                                                onClick={handleDeleteClick}
+                                                disabled={deleteState.loading}
+                                                fullWidth
+                                            >
+                                                Delete
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Button
+                                                startIcon={<EditIcon />}
+                                                component={RouterLink}
+                                                to={`/prompts/${prompt.id}/edit`}
+                                                color="primary"
+                                                variant="outlined"
+                                                size="small"
+                                            >
+                                                Edit
+                                            </Button>
+                                            <Button
+                                                startIcon={<DeleteIcon />}
+                                                color="error"
+                                                variant="outlined"
+                                                size="small"
+                                                onClick={handleDeleteClick}
+                                                disabled={deleteState.loading}
+                                            >
+                                                Delete
+                                            </Button>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </Box>
                     </Box>
 
                     {/* Description if available */}

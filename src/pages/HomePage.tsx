@@ -42,13 +42,27 @@ export function HomePage() {
                     Store, organize, and share your AI prompts in one place. A
                     powerful tool for managing all your prompting needs.
                 </Typography>
-                <Box sx={{ mt: 4 }}>
+                <Box 
+                    sx={{
+                        mt: 4,
+                        display: 'flex', 
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        justifyContent: 'center',
+                        width: '100%',
+                        gap: { xs: 2, sm: 1 }
+                    }}
+                >
+                    {/* Button to browse prompts */}
                     <Button
                         variant="contained"
                         size="large"
                         component={RouterLink}
                         to="/prompts"
-                        sx={{ mx: 1 }}
+                        fullWidth={false}
+                        sx={{ 
+                            mx: { sm: 1 },
+                            minWidth: { xs: '200px', sm: 'auto' }
+                        }}
                     >
                         Browse Prompts
                     </Button>
@@ -59,10 +73,14 @@ export function HomePage() {
                             variant="outlined"
                             size="large"
                             component={RouterLink}
-                            to="/profile"
-                            sx={{ mx: 1 }}
+                            to="/my-library"
+                            fullWidth={false}
+                            sx={{ 
+                                mx: { sm: 1 },
+                                minWidth: { xs: '200px', sm: 'auto' }
+                            }}
                         >
-                            My Profile
+                            My Library
                         </Button>
                     ) : (
                         <Button
@@ -70,7 +88,11 @@ export function HomePage() {
                             size="large"
                             component={RouterLink}
                             to="/register"
-                            sx={{ mx: 1 }}
+                            fullWidth={false}
+                            sx={{ 
+                                mx: { sm: 1 },
+                                minWidth: { xs: '200px', sm: 'auto' }
+                            }}
                         >
                             Get Started
                         </Button>

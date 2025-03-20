@@ -1,12 +1,17 @@
 /**
  * File: src/components/prompt/PromptCard.tsx
  *
- * Description: Component for displaying a prompt card with basic information
- * and actions such as copying to clipboard
+ * Description: Card component for displaying prompt summaries in lists
+ * with favorite, edit, and copy functionality
+ *
  */
 
+import { useFavoriteStatus } from '@/hooks/useFavorites';
+import { userAtom } from '@/store/authAtom';
 import { PromptType } from '@/types/prompt';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import {
     Box,
     Card,
@@ -14,30 +19,34 @@ import {
     Chip,
     IconButton,
     Stack,
+    Tooltip,
     Typography,
 } from '@mui/material';
+import { useAtomValue } from 'jotai';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-type PromptCardProps = {
+interface PromptCardProps {
     prompt: PromptType;
-};
+}
 
-export function PromptCard(props: PromptCardProps) {
-    const { prompt } = props;
+export function PromptCard({ prompt }: PromptCardProps) {
     const [copied, setCopied] = useState(false);
+    const currentUser = useAtomValue(userAtom);
+    const navigate = useNavigate();
 
-    // Truncate description to first 30 characters
-    const truncatedDescription = prompt.description
-        ? prompt.description.length > 30
-            ? `${prompt.description.substring(0, 30)}...`
-            : prompt.description
-        : '';
+    // Use the favorites hook
+    const {
+        isFavorite,
+        favoriteCount,
+        loading: favoriteLoading,
+        toggleFavorite,
+    } = useFavoriteStatus(prompt.id);
 
     // Only show up to 3 tags
     const displayTags = prompt.tags.slice(0, 3);
 
-    const handleCopyClick = async (e: React.MouseEvent) => {
+    const handleCopy = async (e: React.MouseEvent) => {
         // Prevent navigation when clicking the copy button
         e.stopPropagation();
         e.preventDefault();
@@ -51,6 +60,27 @@ export function PromptCard(props: PromptCardProps) {
             console.error('Failed to copy content:', err);
         }
     };
+
+    // Handle favorite toggle
+    const handleFavoriteToggle = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!currentUser) {
+            // Redirect to login if not authenticated
+            navigate('/login', { state: { from: `/prompts/${prompt.id}` } });
+            return;
+        }
+
+        toggleFavorite();
+    };
+
+    // Truncate description to first 30 characters
+    const truncatedDescription = prompt.description
+        ? prompt.description.length > 30
+            ? `${prompt.description.substring(0, 30)}...`
+            : prompt.description
+        : '';
 
     return (
         <Link
@@ -104,24 +134,69 @@ export function PromptCard(props: PromptCardProps) {
                             {prompt.title}
                         </Typography>
 
-                        <IconButton
-                            size="small"
-                            onClick={handleCopyClick}
-                            color={copied ? 'success' : 'default'}
-                            title="Copy prompt to clipboard"
-                            aria-label="Copy to clipboard"
-                        >
-                            <ContentCopyIcon fontSize="small" />
-                        </IconButton>
+                        {/* Copy button */}
+                        <Tooltip title={copied ? 'Copied!' : 'Copy prompt'}>
+                            <IconButton
+                                aria-label="copy prompt"
+                                onClick={handleCopy}
+                                size="small"
+                            >
+                                <ContentCopyIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+
+                        {/* Favorite button */}
+                        {currentUser && (
+                            <Tooltip
+                                title={
+                                    isFavorite
+                                        ? 'Remove from favorites'
+                                        : 'Add to favorites'
+                                }
+                            >
+                                <IconButton
+                                    aria-label={
+                                        isFavorite ? 'unfavorite' : 'favorite'
+                                    }
+                                    onClick={handleFavoriteToggle}
+                                    disabled={favoriteLoading}
+                                    color="error"
+                                    size="small"
+                                >
+                                    {isFavorite ? (
+                                        <FavoriteIcon fontSize="small" />
+                                    ) : (
+                                        <FavoriteBorderIcon fontSize="small" />
+                                    )}
+                                </IconButton>
+                            </Tooltip>
+                        )}
                     </Box>
 
-                    <Chip
-                        label={prompt.category}
-                        size="small"
-                        sx={{ alignSelf: 'flex-start', mb: 1 }}
-                        color="primary"
-                        variant="outlined"
-                    />
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            gap: 1,
+                            flexWrap: 'wrap',
+                            mb: 2,
+                        }}
+                    >
+                        <Chip
+                            label={favoriteCount}
+                            size="small"
+                            color="error"
+                            variant="outlined"
+                            icon={<FavoriteIcon fontSize="small" />}
+                            sx={{ padding: 0.5 }}
+                        />
+
+                        <Chip
+                            label={prompt.category}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                        />
+                    </Box>
 
                     {truncatedDescription && (
                         <Typography

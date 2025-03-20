@@ -11,7 +11,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
-import SettingsIcon from '@mui/icons-material/Settings';
 import {
     Avatar,
     Box,
@@ -182,7 +181,7 @@ export const MobileDrawerContent = ({
                                 </ListItemButton>
                             </ListItem>
 
-                            <ListItem disablePadding>
+                            {/* <ListItem disablePadding>
                                 <ListItemButton
                                     component={NavLink}
                                     to="/settings"
@@ -193,7 +192,7 @@ export const MobileDrawerContent = ({
                                     </ListItemIcon>
                                     <ListItemText primary="Settings" />
                                 </ListItemButton>
-                            </ListItem>
+                            </ListItem> */}
 
                             <Divider sx={{ my: 1 }} />
 
